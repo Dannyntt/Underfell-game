@@ -197,10 +197,6 @@ Contextual behavior
 
 ### ⚔️ Stats
 
-<a id="stats"></a>
-
-### ⚔️ Stats
-
 <div align="center">
 
 | | Actor | HP | Notes |
