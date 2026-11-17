@@ -299,6 +299,7 @@ Because the walker overlaps the room's drawn furniture, draw() saves the 87 word
 Fixed pool of 12 bullets; freeSlot() finds an inactive slot on each spawn. Zero allocations per frame — important because Jack has no garbage collection.
 
 </td> <td width="50%" valign="top">
+ 
 ## 🌀 Procedural Bullet Patterns
 Five attack patterns (0..4) with tunable spawn interval and velocity.
 
@@ -321,7 +322,9 @@ The boss's bullet-hell phase gets harder and switches patterns each turn, so the
 <a id="what-i-learned"></a>
 
 ## 📝 What I Learned
+
 <table> <tr> <td width="50%" valign="top">
+ 
 ## 🧠 Manual Memory Management
 Jack has no generics, no exceptions, no GC. Every String passed to Output.printString must be .dispose()d, every array must be .dispose()d, and every class must .dispose() itself in its own dispose(). Getting this right across Main → Room / Walker / Heart / Box / Bullets / Ui was a real lesson.
 
@@ -332,6 +335,7 @@ Drawing via Screen.drawRectangle is convenient but slow. Writing bit patterns di
 The separation between Heart (movement + sub-pixel state), Bullets (pool + patterns), Box (limits + border), and Main (turn logic + endings) meant each piece could be tested and tuned in isolation. Bullets.setPattern() and Bullets.setLevel() were especially clean to tune independently.
 
 </td> <td width="50%" valign="top">
+ 
 ## 🎨 Rendering Order Matters
 The Walker is drawn after the room and saves/restores the pixels it covers — otherwise moving across a piece of furniture left holes. This one bit me more than once.
 
