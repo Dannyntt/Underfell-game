@@ -193,16 +193,25 @@ Contextual behavior
 
 ## 🧠 Game Mechanics
 
-⚔️ Stats
+<a id="stats"></a>
 
-Actor	HP	Notes
-🫀 Player	20	Can be healed by Cake
-👹 Luzbel	30	ATK 4 · DEF 0
-🍰 Items	Cake × 2	Each restores +10 HP (capped at 20)
-The turn counter starts at 1 and drives both difficulty and pattern selection.
+### ⚔️ Stats
 
-<a id="player-turn"></a>
+<a id="stats"></a>
 
+### ⚔️ Stats
+
+<div align="center">
+
+| | Actor | HP | Notes |
+| :---: | :--- | :---: | :--- |
+| 🫀 | **Player** | **20** | Healed by Cake |
+| 👹 | **Luzbel** | **30** | ATK 4 · DEF 0 |
+| 🍰 | **Items** | **Cake × 2** | Each restores **+10 HP** (capped at 20) |
+
+</div>
+
+> The **turn counter** starts at `1` and drives both **difficulty** and **pattern selection**.
 ## 🎯 Player Turn — FIGHT / ACT / ITEM / MERCY
 <details> <summary><b>⚔️ FIGHT</b> — Timing-based attack minigame</summary>
 A vertical bar slides across a slot. Press <kbd>Z</kbd> as close to the center as possible.
