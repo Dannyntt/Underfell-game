@@ -17,8 +17,8 @@
 
 ---
 
-> [Wanna see a gameplay first?]
-> **(https://youtu.be/MiFXNxq8IH8)
+> [Wanna see a gameplay first? :)]
+> **(https://youtu.be/MiFXNxq8IH8)**
 
 ---
 
