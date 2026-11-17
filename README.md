@@ -17,8 +17,8 @@
 
 ---
 
-> [!WARNING]
-> **Fan Project Disclaimer** — This is a **non-commercial fan project** inspired by *Undertale* (created by Toby Fox) All original *Undertale* characters and concepts belong to their respective creators. The Jack source code here is my own work.
+> [Wanna see a gameplay first?]
+> **(https://youtu.be/MiFXNxq8IH8)
 
 ---
 
