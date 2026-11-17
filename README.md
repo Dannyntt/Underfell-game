@@ -44,7 +44,7 @@
 
 ## 📖 Overview
 
-A compact **overworld + turn-based bullet-hell battle** that runs on the Hack computer. You walk through a small room, meet **Luzbel** — an aggressive Underfell-style boss — and fight him with the classic Undertale loop:
+A compact **overworld + turn-based bullet-hell battle** that runs on the Hack computer. You walk through a small room, meet **Luzbel** — an aggressive boss — and fight him with the classic loop:
 
 <div align="center">
 
