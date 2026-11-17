@@ -346,19 +346,19 @@ No sprite engine, no fonts, no audio — just Screen, Keyboard, Output, and a 16
 <a id="roadmap"></a>
 
 ## 🔭 Roadmap
+
 □ More bullet patterns — spirals, gaps, walls, boss attack phases
 □ Sound — Hack has no native audio, but the VM Emulator could be extended
 □ Persistence — save a high score / spare-run flag across sessions
 □ Performance — reduce per-frame allocations further to stay smooth at Normal speed
 □ Fourth ending — e.g. attack → spare (currently strictly kill-or-spare)
+
 <a id="author"></a>
 
 ## 👤 Author
-<div align="center">
-Dannyntt
-Nand2Tetris student
-
-https://img.shields.io/badge/GitHub-Dannyntt-181717?style=for-the-badge&logo=github
+@Dannyntt
+@vantaflex
+@
 
 </div>
 📜 License
