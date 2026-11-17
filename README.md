@@ -321,7 +321,7 @@ The boss's bullet-hell phase gets harder and switches patterns each turn, so the
 </td> </tr> </table>
 <a id="what-i-learned"></a>
 
-## 📝 What I Learned
+## 📝 What we Learned
 
 <table> <tr> <td width="50%" valign="top">
  
