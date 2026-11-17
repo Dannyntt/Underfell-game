@@ -320,20 +320,20 @@ The boss's bullet-hell phase gets harder and switches patterns each turn, so the
 
 ## 📝 What I Learned
 <table> <tr> <td width="50%" valign="top">
-## 🧠 Manual Memory Management
+ 🧠 Manual Memory Management
 Jack has no generics, no exceptions, no GC. Every String passed to Output.printString must be .dispose()d, every array must be .dispose()d, and every class must .dispose() itself in its own dispose(). Getting this right across Main → Room / Walker / Heart / Box / Bullets / Ui was a real lesson.
 
-## 🖥️ The Screen Is a Real Framebuffer
+ 🖥️ The Screen Is a Real Framebuffer
 Drawing via Screen.drawRectangle is convenient but slow. Writing bit patterns directly into 16384 + row*32 + word is orders of magnitude faster and is what makes the sprites animate smoothly in the VM Emulator.
 
-## 🧩 Modular Design Pays Off
+ 🧩 Modular Design Pays Off
 The separation between Heart (movement + sub-pixel state), Bullets (pool + patterns), Box (limits + border), and Main (turn logic + endings) meant each piece could be tested and tuned in isolation. Bullets.setPattern() and Bullets.setLevel() were especially clean to tune independently.
 
 </td> <td width="50%" valign="top">
-## 🎨 Rendering Order Matters
+ 🎨 Rendering Order Matters
 The Walker is drawn after the room and saves/restores the pixels it covers — otherwise moving across a piece of furniture left holes. This one bit me more than once.
 
-## 🔒 Constraints Force Good Design
+ 🔒 Constraints Force Good Design
 No sprite engine, no fonts, no audio — just Screen, Keyboard, Output, and a 16-bit CPU. Every visual decision was a bit-level one, and every loop had to fit the frame budget of the VM Emulator at Fast.
 
 </td> </tr> </table>
