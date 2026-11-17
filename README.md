@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🎮 Underfell — Luzbel Battle
+# 🎮 Underfell
 
-### A fan-made *Undertale / Underfell* battle game written entirely in **Jack**
+### A fan-made *Undertale* battle game written entirely in **Jack**
 
 *Built from scratch for the Nand2Tetris **Hack** platform — no engine, no sprites, just a 16-bit CPU and a framebuffer.*
 
@@ -18,7 +18,7 @@
 ---
 
 > [!WARNING]
-> **Fan Project Disclaimer** — This is a **non-commercial fan project** inspired by *Undertale* (created by Toby Fox) and the *Underfell* AU. All original *Undertale* characters and concepts belong to their respective creators. The Jack source code here is my own work.
+> **Fan Project Disclaimer** — This is a **non-commercial fan project** inspired by *Undertale* (created by Toby Fox) All original *Undertale* characters and concepts belong to their respective creators. The Jack source code here is my own work.
 
 ---
 
