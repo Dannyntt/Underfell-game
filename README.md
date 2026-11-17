@@ -282,7 +282,7 @@ Neat touch for replay variety.
 
 ## 🧩 Technical Highlights
 <div align="center">
-The parts I'm most proud of — all hand-rolled in Jack.
+The parts we are most proud of, all hand-rolled in Jack. :)
 
 </div><table> <tr> <td width="50%" valign="top">
  
