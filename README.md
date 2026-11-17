@@ -192,7 +192,9 @@ Contextual behavior
 <a id="stats"></a>
 
 ## 🧠 Game Mechanics
+
 ⚔️ Stats
+
 Actor	HP	Notes
 🫀 Player	20	Can be healed by Cake
 👹 Luzbel	30	ATK 4 · DEF 0
