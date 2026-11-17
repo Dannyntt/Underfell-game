@@ -78,7 +78,7 @@ The Hack platform is **extremely constrained**:
 | Audio | None native |
 | Sprites | None built-in |
 
-The **Underfell aesthetic** — dark, red-black, high-contrast — maps naturally onto that. And a **turn-and-dodge** format fits the `Sys.wait` + `Keyboard.keyPressed` main loop much better than a free-roaming action game would.
+The **Underfell aesthetic** — dark, high-contrast — maps naturally onto that. And a **turn-and-dodge** format fits the `Sys.wait` + `Keyboard.keyPressed` main loop much better than a free-roaming action game would.
 
 ---
 
