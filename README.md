@@ -139,6 +139,8 @@ Underfell-game/
 ├── Bullets.jack   // Fixed bullet pool (12), 5 attack patterns, sub-pixel sprites, collision
 ├── Box.jack       // Battle box boundaries + drawing; provides limits for the Heart
 
+```
+
 🔍 Module Roles
 <details> <summary><b>Main.jack</b> — Game controller & battle loop</summary>
 Static state (hp, bossHp, items, talk, turn, ending, seed), title screen, HOW TO PLAY, overworld walk + interact, playerTurn(), defend(), ending resolution.
