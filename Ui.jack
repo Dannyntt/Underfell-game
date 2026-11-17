@@ -1,0 +1,555 @@
+class Ui {
+    // Todas las cadenas que se pasan a put() y say() se liberan aqui (evita fugas de heap).
+
+    // Borra el interior de la caja (palabras 7..24, filas 100..180) sin tocar el borde
+    function void clearBox() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(112, 100, 399, 180);
+        do Screen.setColor(true);
+        return;
+    }
+
+    // Texto instantaneo
+    function void put(int row, int col, String s) {
+        do Output.moveCursor(row, col);
+        do Output.printString(s);
+        do s.dispose();
+        return;
+    }
+
+    // Texto con efecto maquina de escribir en (row, col)
+    function void sayAt(int row, int col, String s) {
+        var int i, n;
+        do Output.moveCursor(row, col);
+        let n = s.length();
+        let i = 0;
+        while (i < n) {
+            do Output.printChar(s.charAt(i));
+            do Sys.wait(18);
+            let i = i + 1;
+        }
+        do s.dispose();
+        return;
+    }
+
+    // Idem, dentro de la caja de combate (columna 15)
+    function void say(int row, String s) {
+        do Ui.sayAt(row, 15, s);
+        return;
+    }
+
+    // Borra las filas de texto 21 y 22 (y=226..255), ancho completo
+    function void clearText() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 226, 511, 255);
+        do Screen.setColor(true);
+        return;
+    }
+
+    function void hpBar(int hp) {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(216, 189, 277, 196);
+        do Screen.setColor(true);
+        if (hp > 0) {
+            do Screen.drawRectangle(216, 189, 216 + (hp * 3) - 1, 196);
+        }
+        do Output.moveCursor(17, 35);
+        do Output.printInt(hp);
+        do Output.printChar(32);
+        do Output.printChar(32);
+        return;
+    }
+
+    // Barra de vida de Luzbel (arriba a la izquierda, 4 px por punto de vida)
+    function void bossBar(int hp) {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(32, 24, 152, 29);
+        do Screen.setColor(true);
+        if (hp > 0) {
+            do Screen.drawRectangle(32, 24, 32 + (hp * 4) - 1, 29);
+        }
+        return;
+    }
+
+    function void turnLabel(int t) {
+        do Ui.put(17, 48, "TURN ");
+        do Output.printInt(t);
+        return;
+    }
+
+    function void drawMenu() {
+        do Ui.put(20, 6, "FIGHT");
+        do Ui.put(20, 20, "ACT");
+        do Ui.put(20, 34, "ITEM");
+        do Ui.put(20, 48, "MERCY");
+        return;
+    }
+
+    // Sprite pequeno de Luzbel (32 x 30 px) con su esquina superior izquierda en el offset de pantalla 'base'
+    // (16384 + fila * 32 + palabra). Titulo: 16975. Sala: 16783.
+    function void drawBossAt(int base) {
+        var Array s;
+        let s = base;
+        let s[0] = 32;
+        let s[1] = 0;
+        let s[32] = 112;
+        let s[33] = 8;
+        let s[64] = 112;
+        let s[65] = 12;
+        let s[96] = 208;
+        let s[97] = 30;
+        let s[128] = 472;
+        let s[129] = 31;
+        let s[160] = -120;
+        let s[161] = 29;
+        let s[192] = -25384;
+        let s[193] = 8;
+        let s[224] = 112;
+        let s[225] = 13;
+        let s[256] = 8752;
+        let s[257] = 5;
+        let s[288] = 30480;
+        let s[289] = 1543;
+        let s[320] = 8720;
+        let s[321] = 3842;
+        let s[352] = 2064;
+        let s[353] = 7042;
+        let s[384] = 15888;
+        let s[385] = 14722;
+        let s[416] = 32;
+        let s[417] = 7362;
+        let s[448] = -15904;
+        let s[449] = 3681;
+        let s[480] = 15920;
+        let s[481] = 1905;
+        let s[512] = 16;
+        let s[513] = 819;
+        let s[544] = 24;
+        let s[545] = 434;
+        let s[576] = 8;
+        let s[577] = 290;
+        let s[608] = 12;
+        let s[609] = 866;
+        let s[640] = 24964;
+        let s[641] = 292;
+        let s[672] = 24964;
+        let s[673] = 420;
+        let s[704] = 24966;
+        let s[705] = 180;
+        let s[736] = 24962;
+        let s[737] = 156;
+        let s[768] = 2;
+        let s[769] = 216;
+        let s[800] = 3;
+        let s[801] = 72;
+        let s[832] = 1;
+        let s[833] = 120;
+        let s[864] = 29071;
+        let s[865] = 12;
+        let s[896] = -1064;
+        let s[897] = 6;
+        let s[928] = -29072;
+        let s[929] = 3;
+        return;
+    }
+
+    // Sprite grande de Luzbel (96 x 90 px = el pequeno x3): palabras 13..18 (x = 208..303), filas 4..93.
+    // Se dibuja despues de Screen.clearScreen().
+    function void drawBossBig() {
+        var Array s;
+        let s = 16525;
+        let s[0] = (-32767 - 1);
+        let s[1] = 3;
+        let s[32] = (-32767 - 1);
+        let s[33] = 3;
+        let s[64] = (-32767 - 1);
+        let s[65] = 3;
+        let s[96] = -4096;
+        let s[97] = 31;
+        let s[99] = 3584;
+        let s[128] = -4096;
+        let s[129] = 31;
+        let s[131] = 3584;
+        let s[160] = -4096;
+        let s[161] = 31;
+        let s[163] = 3584;
+        let s[192] = -4096;
+        let s[193] = 31;
+        let s[195] = 4032;
+        let s[224] = -4096;
+        let s[225] = 31;
+        let s[227] = 4032;
+        let s[256] = -4096;
+        let s[257] = 31;
+        let s[259] = 4032;
+        let s[288] = 28672;
+        let s[289] = 252;
+        let s[291] = 32760;
+        let s[320] = 28672;
+        let s[321] = 252;
+        let s[323] = 32760;
+        let s[352] = 28672;
+        let s[353] = 252;
+        let s[355] = 32760;
+        let s[384] = 32256;
+        let s[385] = 2044;
+        let s[387] = 32767;
+        let s[416] = 32256;
+        let s[417] = 2044;
+        let s[419] = 32767;
+        let s[448] = 32256;
+        let s[449] = 2044;
+        let s[451] = 32767;
+        let s[480] = 3584;
+        let s[481] = -32;
+        let s[482] = -1;
+        let s[483] = 32711;
+        let s[512] = 3584;
+        let s[513] = -32;
+        let s[514] = -1;
+        let s[515] = 32711;
+        let s[544] = 3584;
+        let s[545] = -32;
+        let s[546] = -1;
+        let s[547] = 32711;
+        let s[576] = 32256;
+        let s[577] = -16132;
+        let s[578] = -8065;
+        let s[579] = 3584;
+        let s[608] = 32256;
+        let s[609] = -16132;
+        let s[610] = -8065;
+        let s[611] = 3584;
+        let s[640] = 32256;
+        let s[641] = -16132;
+        let s[642] = -8065;
+        let s[643] = 3584;
+        let s[672] = -4096;
+        let s[673] = 31;
+        let s[675] = 4039;
+        let s[704] = -4096;
+        let s[705] = 31;
+        let s[707] = 4039;
+        let s[736] = -4096;
+        let s[737] = 31;
+        let s[739] = 4039;
+        let s[768] = -4096;
+        let s[769] = 14339;
+        let s[770] = 896;
+        let s[771] = 455;
+        let s[800] = -4096;
+        let s[801] = 14339;
+        let s[802] = 896;
+        let s[803] = 455;
+        let s[832] = -4096;
+        let s[833] = 14339;
+        let s[834] = 896;
+        let s[835] = 455;
+        let s[864] = 28672;
+        let s[865] = -256;
+        let s[866] = 8177;
+        let s[867] = 511;
+        let s[868] = -2048;
+        let s[869] = 1;
+        let s[896] = 28672;
+        let s[897] = -256;
+        let s[898] = 8177;
+        let s[899] = 511;
+        let s[900] = -2048;
+        let s[901] = 1;
+        let s[928] = 28672;
+        let s[929] = -256;
+        let s[930] = 8177;
+        let s[931] = 511;
+        let s[932] = -2048;
+        let s[933] = 1;
+        let s[960] = 28672;
+        let s[961] = 14336;
+        let s[962] = 896;
+        let s[963] = 56;
+        let s[964] = -256;
+        let s[965] = 15;
+        let s[992] = 28672;
+        let s[993] = 14336;
+        let s[994] = 896;
+        let s[995] = 56;
+        let s[996] = -256;
+        let s[997] = 15;
+        let s[1024] = 28672;
+        let s[1025] = 14336;
+        let s[1026] = 896;
+        let s[1027] = 56;
+        let s[1028] = -256;
+        let s[1029] = 15;
+        let s[1056] = 28672;
+        let s[1058] = 14;
+        let s[1059] = 56;
+        let s[1060] = 16352;
+        let s[1061] = 126;
+        let s[1088] = 28672;
+        let s[1090] = 14;
+        let s[1091] = 56;
+        let s[1092] = 16352;
+        let s[1093] = 126;
+        let s[1120] = 28672;
+        let s[1122] = 14;
+        let s[1123] = 56;
+        let s[1124] = 16352;
+        let s[1125] = 126;
+        let s[1152] = 28672;
+        let s[1153] = -2048;
+        let s[1154] = 1023;
+        let s[1155] = 56;
+        let s[1156] = 2016;
+        let s[1157] = 1022;
+        let s[1184] = 28672;
+        let s[1185] = -2048;
+        let s[1186] = 1023;
+        let s[1187] = 56;
+        let s[1188] = 2016;
+        let s[1189] = 1022;
+        let s[1216] = 28672;
+        let s[1217] = -2048;
+        let s[1218] = 1023;
+        let s[1219] = 56;
+        let s[1220] = 2016;
+        let s[1221] = 1022;
+        let s[1248] = (-32767 - 1);
+        let s[1249] = 3;
+        let s[1251] = 56;
+        let s[1252] = -16132;
+        let s[1253] = 127;
+        let s[1280] = (-32767 - 1);
+        let s[1281] = 3;
+        let s[1283] = 56;
+        let s[1284] = -16132;
+        let s[1285] = 127;
+        let s[1312] = (-32767 - 1);
+        let s[1313] = 3;
+        let s[1315] = 56;
+        let s[1316] = -16132;
+        let s[1317] = 127;
+        let s[1344] = (-32767 - 1);
+        let s[1345] = 2047;
+        let s[1346] = -1024;
+        let s[1347] = -32761;
+        let s[1348] = -2017;
+        let s[1349] = 15;
+        let s[1376] = (-32767 - 1);
+        let s[1377] = 2047;
+        let s[1378] = -1024;
+        let s[1379] = -32761;
+        let s[1380] = -2017;
+        let s[1381] = 15;
+        let s[1408] = (-32767 - 1);
+        let s[1409] = 2047;
+        let s[1410] = -1024;
+        let s[1411] = -32761;
+        let s[1412] = -2017;
+        let s[1413] = 15;
+        let s[1440] = -4096;
+        let s[1441] = -2045;
+        let s[1442] = 1023;
+        let s[1443] = -4089;
+        let s[1444] = -225;
+        let s[1445] = 1;
+        let s[1472] = -4096;
+        let s[1473] = -2045;
+        let s[1474] = 1023;
+        let s[1475] = -4089;
+        let s[1476] = -225;
+        let s[1477] = 1;
+        let s[1504] = -4096;
+        let s[1505] = -2045;
+        let s[1506] = 1023;
+        let s[1507] = -4089;
+        let s[1508] = -225;
+        let s[1509] = 1;
+        let s[1536] = 28672;
+        let s[1539] = -4033;
+        let s[1540] = 16131;
+        let s[1568] = 28672;
+        let s[1571] = -4033;
+        let s[1572] = 16131;
+        let s[1600] = 28672;
+        let s[1603] = -4033;
+        let s[1604] = 16131;
+        let s[1632] = 32256;
+        let s[1635] = -4040;
+        let s[1636] = 2019;
+        let s[1664] = 32256;
+        let s[1667] = -4040;
+        let s[1668] = 2019;
+        let s[1696] = 32256;
+        let s[1699] = -4040;
+        let s[1700] = 2019;
+        let s[1728] = 3584;
+        let s[1731] = -32712;
+        let s[1732] = 1795;
+        let s[1760] = 3584;
+        let s[1763] = -32712;
+        let s[1764] = 1795;
+        let s[1792] = 3584;
+        let s[1795] = -32712;
+        let s[1796] = 1795;
+        let s[1824] = 4032;
+        let s[1827] = -32712;
+        let s[1828] = 16159;
+        let s[1856] = 4032;
+        let s[1859] = -32712;
+        let s[1860] = 16159;
+        let s[1888] = 4032;
+        let s[1891] = -32712;
+        let s[1892] = 16159;
+        let s[1920] = 448;
+        let s[1921] = 2016;
+        let s[1922] = 8064;
+        let s[1923] = -32320;
+        let s[1924] = 1795;
+        let s[1952] = 448;
+        let s[1953] = 2016;
+        let s[1954] = 8064;
+        let s[1955] = -32320;
+        let s[1956] = 1795;
+        let s[1984] = 448;
+        let s[1985] = 2016;
+        let s[1986] = 8064;
+        let s[1987] = -32320;
+        let s[1988] = 1795;
+        let s[2016] = 448;
+        let s[2017] = 2016;
+        let s[2018] = 8064;
+        let s[2019] = -32320;
+        let s[2020] = 2019;
+        let s[2048] = 448;
+        let s[2049] = 2016;
+        let s[2050] = 8064;
+        let s[2051] = -32320;
+        let s[2052] = 2019;
+        let s[2080] = 448;
+        let s[2081] = 2016;
+        let s[2082] = 8064;
+        let s[2083] = -32320;
+        let s[2084] = 2019;
+        let s[2112] = 504;
+        let s[2113] = 2016;
+        let s[2114] = 8064;
+        let s[2115] = -3648;
+        let s[2116] = 227;
+        let s[2144] = 504;
+        let s[2145] = 2016;
+        let s[2146] = 8064;
+        let s[2147] = -3648;
+        let s[2148] = 227;
+        let s[2176] = 504;
+        let s[2177] = 2016;
+        let s[2178] = 8064;
+        let s[2179] = -3648;
+        let s[2180] = 227;
+        let s[2208] = 56;
+        let s[2209] = 2016;
+        let s[2210] = 8064;
+        let s[2211] = 32704;
+        let s[2212] = 224;
+        let s[2240] = 56;
+        let s[2241] = 2016;
+        let s[2242] = 8064;
+        let s[2243] = 32704;
+        let s[2244] = 224;
+        let s[2272] = 56;
+        let s[2273] = 2016;
+        let s[2274] = 8064;
+        let s[2275] = 32704;
+        let s[2276] = 224;
+        let s[2304] = 56;
+        let s[2307] = 32256;
+        let s[2308] = 252;
+        let s[2336] = 56;
+        let s[2339] = 32256;
+        let s[2340] = 252;
+        let s[2368] = 56;
+        let s[2371] = 32256;
+        let s[2372] = 252;
+        let s[2400] = 63;
+        let s[2403] = 3584;
+        let s[2404] = 28;
+        let s[2432] = 63;
+        let s[2435] = 3584;
+        let s[2436] = 28;
+        let s[2464] = 63;
+        let s[2467] = 3584;
+        let s[2468] = 28;
+        let s[2496] = 7;
+        let s[2499] = -512;
+        let s[2500] = 31;
+        let s[2528] = 7;
+        let s[2531] = -512;
+        let s[2532] = 31;
+        let s[2560] = 7;
+        let s[2563] = -512;
+        let s[2564] = 31;
+        let s[2592] = 4095;
+        let s[2593] = 2016;
+        let s[2594] = 8176;
+        let s[2595] = 4032;
+        let s[2624] = 4095;
+        let s[2625] = 2016;
+        let s[2626] = 8176;
+        let s[2627] = 4032;
+        let s[2656] = 4095;
+        let s[2657] = 2016;
+        let s[2658] = 8176;
+        let s[2659] = 4032;
+        let s[2688] = 32256;
+        let s[2689] = 16380;
+        let s[2690] = -2;
+        let s[2691] = 504;
+        let s[2720] = 32256;
+        let s[2721] = 16380;
+        let s[2722] = -2;
+        let s[2723] = 504;
+        let s[2752] = 32256;
+        let s[2753] = 16380;
+        let s[2754] = -2;
+        let s[2755] = 504;
+        let s[2784] = -4096;
+        let s[2785] = -2017;
+        let s[2786] = -8177;
+        let s[2787] = 63;
+        let s[2816] = -4096;
+        let s[2817] = -2017;
+        let s[2818] = -8177;
+        let s[2819] = 63;
+        let s[2848] = -4096;
+        let s[2849] = -2017;
+        let s[2850] = -8177;
+        let s[2851] = 63;
+        return;
+    }
+
+    // Invierte los pixeles del sprite grande (parpadeo)
+    function void flashBig() {
+        var Array s;
+        var int a, r, w;
+        let s = 16525;
+        let a = 0;
+        let r = 0;
+        while (r < 90) {
+            let w = 0;
+            while (w < 6) {
+                let s[a + w] = ~s[a + w];
+                let w = w + 1;
+            }
+            let a = a + 32;
+            let r = r + 1;
+        }
+        return;
+    }
+
+    function void clearBossBig() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(208, 4, 303, 93);
+        do Screen.setColor(true);
+        return;
+    }
+}

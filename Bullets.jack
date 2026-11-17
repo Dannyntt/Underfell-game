@@ -1,0 +1,367 @@
+class Bullets {
+    // Pool fijo de balas. Cada bala usa 2 palabras por fila (sprite 8x8 con 16 desplazamientos).
+    // bd: 0 inactiva, 1 cae, 2 horizontal hacia la derecha, 3 horizontal hacia la izquierda
+    field Array screen, frames, ba, bb, by, bx, bd, bv, bs;
+    // ba: offset en pantalla de la palabra baja, bb: shift*16 (inicio del frame en 'frames')
+    // by/bx: fila y pixel izquierdo, bv: velocidad (px/cuadro), bs: salto (v*32 vertical, v*16 horizontal)
+    field int n, wl, wr, lanes, top, limit, minBx, maxBx;
+    field int seed, timer, level, pattern, thr, sweepLane, sweepDir, flip;
+
+    constructor Bullets new(int aWl, int aWr, int aTop, int aBottom, int size) {
+        var int i, s, src, dst, lo, hi;
+        let screen = 16384;
+        let n = size;
+        let wl = aWl;
+        let wr = aWr;
+        let lanes = aWr - aWl + 1;
+        let top = aTop;
+        let limit = aBottom - 7;               // fila superior maxima (la bala mide 8)
+        let minBx = aWl * 16;                  // pixel izquierdo minimo (borde interior izquierdo)
+        let maxBx = ((aWr + 1) * 16) - 8;      // pixel izquierdo maximo (borde interior derecho)
+
+        let ba = Array.new(n);
+        let bb = Array.new(n);
+        let by = Array.new(n);
+        let bx = Array.new(n);
+        let bd = Array.new(n);
+        let bv = Array.new(n);
+        let bs = Array.new(n);
+        let i = 0;
+        while (i < n) {
+            let bd[i] = 0;
+            let i = i + 1;
+        }
+
+        // Frames: circulo de 8x8 desplazado 0..15 px (16 palabras por desplazamiento)
+        let frames = Array.new(256);
+        let frames[0]  = 60;
+        let frames[2]  = 126;
+        let frames[4]  = 255;
+        let frames[6]  = 255;
+        let frames[8]  = 255;
+        let frames[10] = 255;
+        let frames[12] = 126;
+        let frames[14] = 60;
+        let i = 1;
+        while (i < 16) {
+            let frames[i] = 0;
+            let i = i + 2;
+        }
+        let src = 0;
+        let dst = 16;
+        let s = 1;
+        while (s < 16) {
+            let i = 0;
+            while (i < 16) {
+                let lo = frames[src + i];
+                let hi = frames[src + i + 1];
+                let hi = hi + hi;
+                if (lo < 0) { let hi = hi + 1; }
+                let frames[dst + i] = lo + lo;
+                let frames[dst + i + 1] = hi;
+                let i = i + 2;
+            }
+            let src = dst;
+            let dst = dst + 16;
+            let s = s + 1;
+        }
+
+        let seed = 12345;
+        let timer = 0;
+        let level = 1;
+        let pattern = 0;
+        let thr = 12;
+        let sweepLane = aWl;
+        let sweepDir = 1;
+        let flip = 0;
+        return this;
+    }
+
+    method void reseed(int s) {
+        let seed = s & 32767;
+        return;
+    }
+
+    // Nivel de dificultad 1..5: mas balas, mas rapidas y mas horizontales
+    method void setLevel(int l) {
+        let level = l;
+        do retune();
+        return;
+    }
+
+    // Patron de ataque: 0 lluvia, 1 laterales apuntadas, 2 cortina barriendo,
+    // 3 apuntadas verticales y horizontales alternadas, 4 caos
+    method void setPattern(int p) {
+        let pattern = p;
+        let sweepLane = wl;
+        let sweepDir = 1;
+        let flip = 0;
+        do retune();
+        return;
+    }
+
+    // Cuadros entre balas nuevas (la cortina va al doble de ritmo, las laterales a la mitad)
+    method void retune() {
+        let thr = 14 - (level + level);
+        if (pattern = 2) { let thr = thr / 2; }
+        if (pattern = 1) { let thr = thr + thr; }          // las laterales apuntadas salen mas espaciadas
+        if (thr < 1) { let thr = 1; }
+        return;
+    }
+
+    method int rnd() {
+        let seed = ((seed * 77) + 13) & 32767;
+        return seed;
+    }
+
+    method int freeSlot() {
+        var int i;
+        let i = 0;
+        while (i < n) {
+            if (bd[i] = 0) { return i; }
+            let i = i + 1;
+        }
+        return -1;
+    }
+
+    // Bala que cae por el carril w (palabra wl..wr)
+    method void addV(int w, int v) {
+        var int i;
+        let i = freeSlot();
+        if (i < 0) { return; }
+        let bd[i] = 1;
+        let bv[i] = v;
+        let bs[i] = v * 32;
+        let bx[i] = (w * 16) + 4;
+        let by[i] = top;
+        let ba[i] = (top * 32) + w;
+        let bb[i] = 64;                          // shift 4: centrada en la palabra
+        return;
+    }
+
+    // Bala horizontal en la fila row, entrando por la izquierda o por la derecha
+    method void addH(int row, int v, boolean fromLeft) {
+        var int i;
+        let i = freeSlot();
+        if (i < 0) { return; }
+        if (row < top) { let row = top; }
+        if (row > limit) { let row = limit; }
+        let bv[i] = v;
+        let bs[i] = v * 16;
+        let by[i] = row;
+        if (fromLeft) {
+            let bd[i] = 2;
+            let bx[i] = minBx;
+            let ba[i] = (row * 32) + wl;
+            let bb[i] = 0;
+        } else {
+            let bd[i] = 3;
+            let bx[i] = maxBx;
+            let ba[i] = (row * 32) + wr;
+            let bb[i] = 128;
+        }
+        return;
+    }
+
+    // hx, hy: esquina del corazon (las balas apuntadas usan su posicion)
+    method void spawn(int hx, int hy) {
+        var int v, w, r;
+        let v = 1 + (level / 2) + ((rnd() / 256) & 1);
+
+        if (pattern = 0) {                                   // lluvia
+            let r = rnd() / 8;
+            do addV(wl + (r - ((r / lanes) * lanes)), v);
+            return;
+        }
+        if (pattern = 1) {                                   // laterales apuntadas, lados alternos
+            do addH((hy - 4) + ((rnd() / 512) & 7), v, (flip = 0));
+            let flip = 1 - flip;
+            return;
+        }
+        if (pattern = 2) {                                   // cortina que barre los carriles
+            do addV(sweepLane, v);
+            let sweepLane = sweepLane + sweepDir;
+            if (sweepLane > wr) {
+                let sweepLane = wr - 1;
+                let sweepDir = -1;
+            }
+            if (sweepLane < wl) {
+                let sweepLane = wl + 1;
+                let sweepDir = 1;
+            }
+            return;
+        }
+        if (pattern = 3) {                                   // apuntadas: vertical y horizontal alternadas
+            if (flip = 0) {
+                let w = (hx + 5) / 16;
+                if (w < wl) { let w = wl; }
+                if (w > wr) { let w = wr; }
+                do addV(w, v);
+            } else {
+                do addH((hy - 4) + ((rnd() / 512) & 7), v, (((rnd() / 4096) & 1) = 0));
+            }
+            let flip = 1 - flip;
+            return;
+        }
+        // patron 4: caos
+        if (((rnd() / 4096) & 1) = 0) {
+            let r = rnd() / 8;
+            do addV(wl + (r - ((r / lanes) * lanes)), v);
+        } else {
+            do addH((hy - 4) + ((rnd() / 512) & 7), v, (((rnd() / 2048) & 1) = 0));
+        }
+        return;
+    }
+
+    // Desactiva todas las balas (llamar despues de eraseAll) y reinicia el contador
+    method void clear() {
+        var int i;
+        let i = 0;
+        while (i < n) {
+            let bd[i] = 0;
+            let i = i + 1;
+        }
+        let timer = 0;
+        return;
+    }
+
+    method void eraseAll() {
+        var int i, a, b;
+        let i = 0;
+        while (i < n) {
+            if (~(bd[i] = 0)) {
+                let a = ba[i];
+                let b = bb[i];
+                let screen[a] = screen[a] & (~frames[b]);
+                let screen[a + 1] = screen[a + 1] & (~frames[b + 1]);
+                let screen[a + 32] = screen[a + 32] & (~frames[b + 2]);
+                let screen[a + 33] = screen[a + 33] & (~frames[b + 3]);
+                let screen[a + 64] = screen[a + 64] & (~frames[b + 4]);
+                let screen[a + 65] = screen[a + 65] & (~frames[b + 5]);
+                let screen[a + 96] = screen[a + 96] & (~frames[b + 6]);
+                let screen[a + 97] = screen[a + 97] & (~frames[b + 7]);
+                let screen[a + 128] = screen[a + 128] & (~frames[b + 8]);
+                let screen[a + 129] = screen[a + 129] & (~frames[b + 9]);
+                let screen[a + 160] = screen[a + 160] & (~frames[b + 10]);
+                let screen[a + 161] = screen[a + 161] & (~frames[b + 11]);
+                let screen[a + 192] = screen[a + 192] & (~frames[b + 12]);
+                let screen[a + 193] = screen[a + 193] & (~frames[b + 13]);
+                let screen[a + 224] = screen[a + 224] & (~frames[b + 14]);
+                let screen[a + 225] = screen[a + 225] & (~frames[b + 15]);
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void drawAll() {
+        var int i, a, b;
+        let i = 0;
+        while (i < n) {
+            if (~(bd[i] = 0)) {
+                let a = ba[i];
+                let b = bb[i];
+                let screen[a] = screen[a] | frames[b];
+                let screen[a + 1] = screen[a + 1] | frames[b + 1];
+                let screen[a + 32] = screen[a + 32] | frames[b + 2];
+                let screen[a + 33] = screen[a + 33] | frames[b + 3];
+                let screen[a + 64] = screen[a + 64] | frames[b + 4];
+                let screen[a + 65] = screen[a + 65] | frames[b + 5];
+                let screen[a + 96] = screen[a + 96] | frames[b + 6];
+                let screen[a + 97] = screen[a + 97] | frames[b + 7];
+                let screen[a + 128] = screen[a + 128] | frames[b + 8];
+                let screen[a + 129] = screen[a + 129] | frames[b + 9];
+                let screen[a + 160] = screen[a + 160] | frames[b + 10];
+                let screen[a + 161] = screen[a + 161] | frames[b + 11];
+                let screen[a + 192] = screen[a + 192] | frames[b + 12];
+                let screen[a + 193] = screen[a + 193] | frames[b + 13];
+                let screen[a + 224] = screen[a + 224] | frames[b + 14];
+                let screen[a + 225] = screen[a + 225] | frames[b + 15];
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    // Mueve las balas, genera nuevas y devuelve cuantas golpearon al corazon.
+    // hx, hy: esquina superior izquierda del sprite del corazon (pixeles).
+    method int update(int hx, int hy) {
+        var int i, d, cx, cy, t, hits;
+        let hits = 0;
+
+        let timer = timer + 1;
+        if (timer > thr) {
+            let timer = 0;
+            do spawn(hx, hy);
+        }
+
+        let i = 0;
+        while (i < n) {
+            let d = bd[i];
+            if (~(d = 0)) {
+                if (d = 1) {
+                    let cy = by[i] + bv[i];
+                    if (cy > limit) {
+                        let bd[i] = 0;
+                    } else {
+                        let by[i] = cy;
+                        let ba[i] = ba[i] + bs[i];
+                    }
+                } else {
+                    if (d = 2) {
+                        let cx = bx[i] + bv[i];
+                        if (cx > maxBx) {
+                            let bd[i] = 0;
+                        } else {
+                            let bx[i] = cx;
+                            let t = bb[i] + bs[i];
+                            if (t > 240) {
+                                let t = t - 256;
+                                let ba[i] = ba[i] + 1;
+                            }
+                            let bb[i] = t;
+                        }
+                    } else {
+                        let cx = bx[i] - bv[i];
+                        if (cx < minBx) {
+                            let bd[i] = 0;
+                        } else {
+                            let bx[i] = cx;
+                            let t = bb[i] - bs[i];
+                            if (t < 0) {
+                                let t = t + 256;
+                                let ba[i] = ba[i] - 1;
+                            }
+                            let bb[i] = t;
+                        }
+                    }
+                }
+
+                if (~(bd[i] = 0)) {
+                    let cx = bx[i];
+                    let cy = by[i];
+                    // hitbox del corazon: x+2..x+7, y+1..y+6 (6x6); bala: 8x8
+                    if ((cx < (hx + 8)) & ((cx + 8) > (hx + 2)) & (cy < (hy + 7)) & ((cy + 8) > (hy + 1))) {
+                        let bd[i] = 0;
+                        let hits = hits + 1;
+                    }
+                }
+            }
+            let i = i + 1;
+        }
+        return hits;
+    }
+
+    method void dispose() {
+        do frames.dispose();
+        do ba.dispose();
+        do bb.dispose();
+        do by.dispose();
+        do bx.dispose();
+        do bd.dispose();
+        do bv.dispose();
+        do bs.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

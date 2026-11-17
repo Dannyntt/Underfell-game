@@ -1,0 +1,228 @@
+class Room {
+    // Habitacion de exploracion. Lo que bloquea el paso son rectangulos (x1,y1)-(x2,y2) inclusivos
+    // que se comparan con los "pies" del personaje.
+    // 0 techo, 1 pared izq, 2 pared der, 3 marco izq, 4 marco der, 5 zocalo, 6 pie de la cama,
+    // 7 pie del mueble, 8 lampara, 9 cartel.   La escalera central (x 208..303) queda libre.
+    field Array x1, y1, x2, y2;
+    field int n;
+
+    constructor Room new() {
+        let n = 10;
+        let x1 = Array.new(n);
+        let y1 = Array.new(n);
+        let x2 = Array.new(n);
+        let y2 = Array.new(n);
+        let x1[0] = 0;   let y1[0] = 0;   let x2[0] = 511; let y2[0] = 43;
+        let x1[1] = 0;   let y1[1] = 44;  let x2[1] = 207; let y2[1] = 127;
+        let x1[2] = 304; let y1[2] = 44;  let x2[2] = 511; let y2[2] = 127;
+        let x1[3] = 0;   let y1[3] = 128; let x2[3] = 5;   let y2[3] = 223;
+        let x1[4] = 506; let y1[4] = 128; let x2[4] = 511; let y2[4] = 223;
+        let x1[5] = 0;   let y1[5] = 214; let x2[5] = 511; let y2[5] = 223;
+        let x1[6] = 58;  let y1[6] = 128; let x2[6] = 154; let y2[6] = 142;
+        let x1[7] = 372; let y1[7] = 128; let x2[7] = 452; let y2[7] = 140;
+        let x1[8] = 466; let y1[8] = 150; let x2[8] = 496; let y2[8] = 198;
+        let x1[9] = 44;  let y1[9] = 172; let x2[9] = 64;  let y2[9] = 200;
+        return this;
+    }
+
+    function boolean overlap(int ax1, int ay1, int ax2, int ay2, int bx1, int by1, int bx2, int by2) {
+        return (ax1 < (bx2 + 1)) & (ax2 > (bx1 - 1)) & (ay1 < (by2 + 1)) & (ay2 > (by1 - 1));
+    }
+
+    // true si el rectangulo choca con algo
+    method boolean hits(int ax1, int ay1, int ax2, int ay2) {
+        var int i;
+        let i = 0;
+        while (i < n) {
+            if (Room.overlap(ax1, ay1, ax2, ay2, x1[i], y1[i], x2[i], y2[i])) { return true; }
+            let i = i + 1;
+        }
+        return false;
+    }
+
+    // cerca del cartel (el rectangulo que se pasa ya viene ampliado)
+    method boolean nearSign(int ax1, int ay1, int ax2, int ay2) {
+        return Room.overlap(ax1, ay1, ax2, ay2, x1[9], y1[9], x2[9], y2[9]);
+    }
+
+    // zona de encuentro: alrededor de Luzbel, en lo alto de la escalera
+    method boolean nearBoss(int ax1, int ay1, int ax2, int ay2) {
+        return Room.overlap(ax1, ay1, ax2, ay2, 228, 12, 283, 65);
+    }
+
+    // ---------- dibujo ----------
+    function void outline(int ax1, int ay1, int ax2, int ay2) {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(ax1, ay1, ax2, ay1);
+        do Screen.drawRectangle(ax1, ay2, ax2, ay2);
+        do Screen.drawRectangle(ax1, ay1, ax1, ay2);
+        do Screen.drawRectangle(ax2, ay1, ax2, ay2);
+        return;
+    }
+
+    function void blank(int ax1, int ay1, int ax2, int ay2) {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(ax1, ay1, ax2, ay2);
+        do Screen.setColor(true);
+        return;
+    }
+
+    // Ladrillos: lineas horizontales cada bh px y juntas verticales cada bw, alternadas
+    function void bricks(int ax1, int ay1, int ax2, int ay2, int bh, int bw) {
+        var int y, x, ye, off;
+        do Screen.setColor(true);
+        let y = ay1;
+        let off = 0;
+        while (y < ay2) {
+            do Screen.drawRectangle(ax1, y, ax2, y);
+            let ye = (y + bh) - 1;
+            if (ye > ay2) { let ye = ay2; }
+            let x = ax1 + off;
+            while (x < ax2) {
+                if (x > ax1) { do Screen.drawRectangle(x, y + 1, x, ye); }
+                let x = x + bw;
+            }
+            if (off = 0) { let off = bw / 2; } else { let off = 0; }
+            let y = y + bh;
+        }
+        return;
+    }
+
+    function void window(int wx) {
+        do Room.blank(wx, 14, wx + 40, 62);
+        do Room.outline(wx, 14, wx + 40, 62);
+        do Room.outline(wx + 2, 16, wx + 38, 60);
+        do Screen.drawRectangle(wx + 20, 16, wx + 20, 60);       // travesano
+        do Screen.drawRectangle(wx + 2, 38, wx + 38, 38);
+        do Screen.drawLine(wx + 6, 34, wx + 14, 22);             // destellos
+        do Screen.drawLine(wx + 10, 36, wx + 16, 28);
+        do Screen.drawLine(wx + 26, 56, wx + 34, 44);
+        do Screen.drawLine(wx + 30, 58, wx + 36, 50);
+        return;
+    }
+
+    method void draw() {
+        var int xx, yy;
+        do Screen.setColor(true);
+
+        // marco doble
+        do Screen.drawRectangle(0, 0, 511, 3);
+        do Screen.drawRectangle(0, 0, 3, 213);
+        do Screen.drawRectangle(508, 0, 511, 213);
+        do Room.outline(7, 7, 504, 213);
+
+        // paredes de ladrillo (a los lados de la escalera) y suelo de ladrillo
+        do Room.bricks(9, 9, 203, 127, 8, 24);
+        do Room.bricks(308, 9, 502, 127, 8, 24);
+        do Room.bricks(9, 128, 502, 212, 10, 48);
+
+        // zocalo inferior (barra hueca)
+        do Room.outline(6, 214, 505, 221);
+        do Room.outline(8, 216, 503, 219);
+
+        // ventanas a los lados de la escalera
+        do Room.window(156);
+        do Room.window(316);
+
+        // escalera central: barandillas y escalones
+        do Screen.drawRectangle(204, 44, 207, 127);
+        do Screen.drawRectangle(304, 44, 307, 127);
+        do Room.blank(208, 9, 303, 127);
+        let yy = 44;
+        while (yy < 128) {
+            do Screen.drawRectangle(208, yy, 303, yy);
+            let yy = yy + 6;
+        }
+        do Room.outline(210, 10, 301, 43);                    // marco de la puerta de Luzbel
+        do Screen.drawRectangle(204, 44, 307, 45);
+
+        // cuadro
+        do Room.blank(22, 28, 42, 48);
+        do Room.outline(22, 28, 42, 48);
+        do Room.outline(25, 31, 39, 45);
+        do Screen.drawLine(27, 43, 32, 36);
+        do Screen.drawLine(32, 36, 37, 43);
+
+        // mesita de noche con lampara
+        do Room.blank(14, 84, 50, 127);
+        do Room.outline(14, 84, 50, 127);
+        do Screen.drawRectangle(14, 102, 50, 102);
+        do Screen.drawRectangle(29, 92, 35, 94);
+        do Screen.drawRectangle(29, 108, 35, 110);
+        do Room.blank(22, 66, 42, 82);
+        do Room.outline(24, 68, 40, 80);
+        do Screen.drawRectangle(31, 81, 33, 83);
+
+        // cama
+        do Room.blank(58, 70, 154, 142);
+        do Room.outline(58, 70, 154, 88);
+        do Screen.drawRectangle(58, 76, 154, 76);
+        do Room.outline(58, 88, 154, 142);
+        do Room.outline(66, 92, 98, 108);
+        do Screen.drawRectangle(58, 114, 154, 114);
+        let yy = 120;
+        while (yy < 140) {
+            let xx = 66;
+            while (xx < 150) {
+                do Screen.drawRectangle(xx, yy, xx + 1, yy + 1);
+                let xx = xx + 10;
+            }
+            let yy = yy + 8;
+        }
+
+        // mueble con television
+        do Room.blank(372, 50, 452, 140);
+        do Room.outline(400, 50, 448, 82);
+        do Room.outline(404, 54, 444, 78);
+        do Screen.drawLine(412, 74, 422, 58);
+        do Screen.drawLine(420, 74, 426, 64);
+        do Screen.drawRectangle(418, 83, 430, 88);
+        do Room.outline(372, 92, 452, 140);
+        do Screen.drawRectangle(372, 116, 452, 116);
+        do Screen.drawRectangle(406, 100, 418, 102);
+        do Screen.drawRectangle(406, 124, 418, 126);
+        do Screen.drawRectangle(432, 100, 444, 102);
+        do Screen.drawRectangle(432, 124, 444, 126);
+
+        // planta
+        do Room.blank(462, 56, 498, 127);
+        do Room.outline(468, 100, 492, 127);
+        do Screen.drawRectangle(466, 100, 494, 102);
+        do Screen.drawLine(480, 100, 466, 70);
+        do Screen.drawLine(480, 100, 480, 58);
+        do Screen.drawLine(480, 100, 494, 70);
+        do Screen.drawLine(480, 100, 470, 84);
+        do Screen.drawLine(480, 100, 490, 84);
+
+        // lampara de pie
+        do Room.blank(464, 148, 498, 200);
+        do Screen.drawLine(474, 150, 466, 172);
+        do Screen.drawLine(488, 150, 496, 172);
+        do Screen.drawRectangle(474, 150, 488, 150);
+        do Screen.drawRectangle(466, 172, 496, 172);
+        do Screen.drawLine(478, 152, 476, 170);
+        do Screen.drawLine(484, 152, 486, 170);
+        do Screen.drawRectangle(480, 173, 482, 192);
+        do Screen.drawRectangle(472, 193, 490, 198);
+
+        // cartel
+        do Room.blank(42, 170, 66, 202);
+        do Room.outline(44, 172, 64, 186);
+        do Screen.drawRectangle(48, 177, 60, 177);
+        do Screen.drawRectangle(48, 181, 56, 181);
+        do Screen.drawRectangle(52, 187, 56, 200);
+
+        // Luzbel en lo alto de la escalera
+        do Ui.drawBossAt(16783);
+        return;
+    }
+
+    method void dispose() {
+        do x1.dispose();
+        do y1.dispose();
+        do x2.dispose();
+        do y2.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

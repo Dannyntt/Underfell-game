@@ -1,0 +1,542 @@
+class Main {
+    static int hp, bossHp, items, talk, turn, menuSel, ending, seed;   // ending: 0 jugando, 1 derrota al jefe, 2 perdon, 3 game over
+    static boolean quit, raged, exit;
+    static Heart h;
+    static Box b;
+    static Bullets bl;
+
+    // Espera a que se pulse una tecla y a que se suelte
+    function void waitKey() {
+        while (Keyboard.keyPressed() = 0) { do Sys.wait(1); }
+        do Main.release();
+        return;
+    }
+
+    // ---------- Menu de inicio ----------
+    // Devuelve 0 START, 1 HOW TO PLAY, 2 QUIT. El tiempo que tardas es la semilla del azar.
+    function int title() {
+        var int sel, key, r;
+        var boolean done;
+        do Screen.clearScreen();
+        do Ui.drawBossAt(16975);
+        do Ui.put(12, 28, "START");
+        do Ui.put(14, 28, "HOW TO PLAY");
+        do Ui.put(16, 28, "QUIT");
+        do Ui.put(20, 17, "Arrows: choose    Z / Enter: accept");
+        let sel = 0;
+        let r = 0;
+        let done = false;
+        do h.moveTo(192, 133);
+        do h.draw();
+        do Main.release();
+        while (~done) {
+            let key = Keyboard.keyPressed();
+            let seed = seed + 1;
+            if ((key = 131) & (sel > 0)) {
+                do h.erase();
+                let sel = sel - 1;
+                do h.moveTo(192, 133 + (sel * 22));
+                do h.draw();
+                do Main.release();
+            }
+            if ((key = 133) & (sel < 2)) {
+                do h.erase();
+                let sel = sel + 1;
+                do h.moveTo(192, 133 + (sel * 22));
+                do h.draw();
+                do Main.release();
+            }
+            if ((key = 128) | (key = 90)) {
+                let r = sel;
+                let done = true;
+            }
+        }
+        do h.erase();
+        do Main.release();
+        return r;
+    }
+
+    function void help() {
+        do Screen.clearScreen();
+        do Ui.put(3, 26, "HOW TO PLAY");
+        do Ui.put(6, 12, "Arrows ..... move");
+        do Ui.put(8, 12, "Z / Enter .. accept, interact");
+        do Ui.put(10, 12, "X / Esc .... cancel");
+        do Ui.put(12, 12, "Q .......... back to menu");
+        do Ui.put(21, 25, "Press any key");
+        do Main.waitKey();
+        return;
+    }
+
+    // ---------- Zona para caminar ----------
+    // Devuelve true si Luzbel te encuentra (empieza el combate), false si vuelves al menu con Q.
+    // Los "pies" del personaje (x+5..x+28, y+20..y+28) son lo que choca con la habitacion.
+    function boolean overworld() {
+        var Room room;
+        var Walker w;
+        var int key, step, wx, wy, fx1, fy1, fx2, fy2;
+        var boolean go, result;
+
+        do Screen.clearScreen();
+        let room = Room.new();
+        do room.draw();
+        let w = Walker.new(240, 150);
+        do w.draw();
+        do Ui.put(22, 1, "Arrows: walk   Z: interact   Q: menu");
+
+        let go = true;
+        let result = false;
+        while (go) {
+            do w.erase();
+            let key = Keyboard.keyPressed();
+
+            let step = 0;                                  // 2 px por cuadro
+            while (step < 2) {
+                let wx = w.getX();
+                let wy = w.getY();
+                let fx1 = wx + 5;
+                let fy1 = wy + 20;
+                let fx2 = wx + 28;
+                let fy2 = wy + 28;
+                if (key = 130) { if (~(room.hits(fx1 - 1, fy1, fx2 - 1, fy2))) { do w.moveLeft(); } }
+                if (key = 132) { if (~(room.hits(fx1 + 1, fy1, fx2 + 1, fy2))) { do w.moveRight(); } }
+                if (key = 131) { if (~(room.hits(fx1, fy1 - 1, fx2, fy2 - 1))) { do w.moveUp(); } }
+                if (key = 133) { if (~(room.hits(fx1, fy1 + 1, fx2, fy2 + 1))) { do w.moveDown(); } }
+                let step = step + 1;
+            }
+            do w.draw();
+
+            let wx = w.getX();
+            let wy = w.getY();
+            let fx1 = wx + 5;
+            let fy1 = wy + 20;
+            let fx2 = wx + 28;
+            let fy2 = wy + 28;
+            if (room.nearBoss(fx1, fy1, fx2, fy2)) {
+                do Ui.clearText();
+                do Ui.sayAt(21, 1, "* Luzbel blocks your path.");
+                do Sys.wait(1000);
+                let result = true;
+                let go = false;
+            }
+            if (go & ((key = 90) | (key = 128)) & room.nearSign(fx1 - 10, fy1 - 10, fx2 + 10, fy2 + 10)) {
+                do Ui.clearText();
+                do Ui.sayAt(21, 1, "* The sign reads:");
+                do Ui.sayAt(22, 3, "Only faith will keep you from the fire.");
+                do Main.release();
+                do Main.waitKey();
+                do Ui.clearText();
+                do Ui.put(22, 1, "Arrows: walk   Z: interact   Q: menu");
+            }
+            if (key = 81) { let go = false; }
+            do Sys.wait(6);
+        }
+
+        do w.dispose();
+        do room.dispose();
+        return result;
+    }
+
+    // Espera a que se suelte la tecla (el teclado Hack no tiene eventos)
+    function void release() {
+        while (~(Keyboard.keyPressed() = 0)) { do Sys.wait(1); }
+        return;
+    }
+
+    // Texto de ambiente al inicio de cada turno (lineas de maximo 34 caracteres)
+    function void flavor(int t) {
+        if (t = 1) {
+            do Ui.say(10, "* You feel like you're going to");
+            do Ui.say(11, "  have a bad time.");
+            return;
+        }
+        if (t = 2) {
+            do Ui.say(10, "* You should be burning in hell.");
+            return;
+        }
+        if (t = 3) {
+            do Ui.say(10, "* DIE! DIE! DIE!");
+            return;
+        }
+        if (t = 4) {
+            do Ui.say(10, "* You are more evil than I am...");
+            return;
+        }
+        do Ui.say(10, "* Luzbel will fight until his");
+        do Ui.say(11, "  last breath.");
+        return;
+    }
+
+    // Menu FIGHT/ACT/ITEM/MERCY con el corazon: devuelve 0..3 (o 4 si se pulsa Q)
+    function int chooseMenu() {
+        var int key, result;
+        var boolean done;
+        do h.moveTo(16 + (menuSel * 112), 221);
+        do h.draw();
+        let done = false;
+        let result = 0;
+        while (~done) {
+            let key = Keyboard.keyPressed();
+            if ((key = 130) & (menuSel > 0)) {
+                do h.erase();
+                let menuSel = menuSel - 1;
+                do h.moveTo(16 + (menuSel * 112), 221);
+                do h.draw();
+                do Main.release();
+            }
+            if ((key = 132) & (menuSel < 3)) {
+                do h.erase();
+                let menuSel = menuSel + 1;
+                do h.moveTo(16 + (menuSel * 112), 221);
+                do h.draw();
+                do Main.release();
+            }
+            if ((key = 128) | (key = 90)) {          // Enter o Z
+                let done = true;
+                let result = menuSel;
+            }
+            if (key = 81) {                          // Q
+                let done = true;
+                let result = 4;
+            }
+        }
+        do h.erase();
+        do Main.release();
+        return result;
+    }
+
+    // Dibuja los marcadores '>' de una lista de n opciones (filas 11..)
+    function void mark(int sel, int n) {
+        var int i;
+        let i = 0;
+        while (i < n) {
+            do Output.moveCursor(11 + i, 15);
+            if (i = sel) { do Output.printChar(62); } else { do Output.printChar(32); }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    // Lista vertical con flechas arriba/abajo. Enter/Z elige; X o Esc cancelan (-1)
+    function int pick(int n) {
+        var int sel, key, r;
+        var boolean done;
+        let sel = 0;
+        let r = 0;
+        let done = false;
+        do Main.mark(sel, n);
+        do Main.release();
+        while (~done) {
+            let key = Keyboard.keyPressed();
+            if ((key = 131) & (sel > 0)) {
+                let sel = sel - 1;
+                do Main.mark(sel, n);
+                do Main.release();
+            }
+            if ((key = 133) & (sel < (n - 1))) {
+                let sel = sel + 1;
+                do Main.mark(sel, n);
+                do Main.release();
+            }
+            if ((key = 128) | (key = 90)) {
+                let r = sel;
+                let done = true;
+            }
+            if ((key = 88) | (key = 140)) {
+                let r = -1;
+                let done = true;
+            }
+        }
+        do Main.release();
+        return r;
+    }
+
+    // Minijuego de ataque: una barra que se mueve; pulsa Enter/Z cerca del centro
+    function int attack() {
+        var int x, key, d, dmg;
+        var boolean going;
+        do Ui.clearBox();
+        do Screen.setColor(true);
+        do Screen.drawRectangle(128, 130, 383, 130);
+        do Screen.drawRectangle(128, 150, 383, 150);
+        do Screen.drawRectangle(128, 130, 129, 150);
+        do Screen.drawRectangle(382, 130, 383, 150);
+        do Screen.drawRectangle(255, 133, 256, 147);      // marca del centro
+        do Main.release();
+        let x = 132;
+        let dmg = 0;
+        let going = true;
+        while (going) {
+            do Screen.setColor(true);
+            do Screen.drawRectangle(x, 133, x + 3, 147);
+            let key = Keyboard.keyPressed();
+            if ((key = 128) | (key = 90)) {
+                let going = false;
+                let d = (x + 2) - 256;
+                if (d < 0) { let d = 0 - d; }
+                if (d < 96) { let dmg = 3; }
+                if (d < 48) { let dmg = 6; }
+                if (d < 24) { let dmg = 9; }
+                if (d < 8)  { let dmg = 12; }
+                if (d > 95) { let dmg = 1; }
+            } else {
+                do Sys.wait(15);
+                do Screen.setColor(false);
+                do Screen.drawRectangle(x, 133, x + 3, 147);
+                do Screen.setColor(true);
+                do Screen.drawRectangle(255, 133, 256, 147);
+                let x = x + 6;
+                if (x > 376) { let going = false; }       // se paso: fallo (dmg = 0)
+            }
+        }
+        do Sys.wait(500);
+        do Main.release();
+        do Ui.clearBox();
+        return dmg;
+    }
+
+    // Turno del jugador. Devuelve true si gasto el turno (si cancelo, false)
+    function boolean playerTurn() {
+        var int choice, sel, dmg;
+
+        do Ui.clearBox();
+        do Main.flavor(turn);
+        let choice = Main.chooseMenu();
+
+        if (choice = 4) {
+            let quit = true;
+            return false;
+        }
+
+        if (choice = 0) {                                     // FIGHT
+            let dmg = Main.attack();
+            if (dmg = 0) {
+                do Ui.say(10, "* You missed.");
+            } else {
+                do Ui.say(10, "* Hit! Damage: ");
+                do Output.printInt(dmg);
+                let bossHp = bossHp - dmg;
+                if (bossHp < 1) {
+                    let bossHp = 0;
+                    let ending = 1;
+                }
+                do Ui.bossBar(bossHp);
+            }
+            do Sys.wait(900);
+            return true;
+        }
+
+        if (choice = 1) {                                     // ACT
+            do Ui.clearBox();
+            do Ui.put(11, 17, "Check");
+            do Ui.put(12, 17, "Talk");
+            let sel = Main.pick(2);
+            if (sel < 0) { return false; }
+            do Ui.clearBox();
+            if (sel = 0) {
+                do Ui.say(10, "* LUZBEL  ATK 4  DEF 0");
+                do Ui.say(11, "* He likes to talk about faith");
+            } else {
+                if (talk < 3) { let talk = talk + 1; }
+                if (talk = 1) {
+                    do Ui.say(10, "* You try to talk to Luzbel");
+                    do Ui.say(11, "  about Faith.");
+                }
+                if (talk = 2) {
+                    do Ui.say(10, "* Luzbel listens, but he is");
+                    do Ui.say(11, "  still shaking.");
+                }
+                if (talk = 3) {
+                    do Ui.say(10, "* Luzbel does not want to fight");
+                    do Ui.say(11, "  anymore.");
+                }
+            }
+            do Sys.wait(900);
+            return true;
+        }
+
+        if (choice = 2) {                                     // ITEM
+            do Ui.clearBox();
+            if (items = 0) {
+                do Ui.say(10, "* You have no items.");
+                do Sys.wait(900);
+                return false;
+            }
+            do Ui.put(11, 17, "Cake x");
+            do Output.printInt(items);
+            let sel = Main.pick(1);
+            if (sel < 0) { return false; }
+            let items = items - 1;
+            let hp = hp + 10;
+            if (hp > 20) { let hp = 20; }
+            do Ui.hpBar(hp);
+            do Ui.clearBox();
+            do Ui.say(10, "* You eat the cake. HP restored.");
+            do Sys.wait(900);
+            return true;
+        }
+
+        // MERCY
+        do Ui.clearBox();
+        do Ui.put(11, 17, "Spare");
+        let sel = Main.pick(1);
+        if (sel < 0) { return false; }
+        if (talk > 2) {
+            let ending = 2;
+        } else {
+            do Ui.clearBox();
+            do Ui.say(10, "* Luzbel still wants to fight.");
+            do Sys.wait(900);
+        }
+        return true;
+    }
+
+    // Fase de esquivar: el nivel (dificultad) es el numero de turno, maximo 5
+    function void defend() {
+        var int level, pat, dur, f, key, hits;
+
+        let level = turn;
+        if (level > 5) { let level = 5; }
+        if ((turn > 2) & (bossHp < 30) & ~raged) {            // se enfurece solo si ya le hicieron dano
+            let raged = true;
+            do Ui.flashBig();
+            do Sys.wait(150);
+            do Ui.flashBig();
+            do Sys.wait(150);
+            do Ui.flashBig();
+            do Sys.wait(150);
+            do Ui.flashBig();
+        }
+
+        do Ui.clearBox();
+        do Sys.wait(300);
+        do h.moveTo(248, 136);                                // centro de la caja
+        do h.draw();
+        let pat = turn - 1;                                   // patron distinto por turno (0..4)
+        if (pat > 4) { let pat = 4; }
+        do bl.setPattern(pat);
+        do bl.setLevel(level);
+        do bl.clear();
+
+        let dur = 150 + (level * 30);
+        let f = 0;
+        let key = 0;
+        while ((f < dur) & (ending = 0) & ~quit) {
+            do bl.eraseAll();
+
+            let key = Keyboard.keyPressed();
+            if (key = 130) { do h.moveLeft(); }
+            if (key = 132) { do h.moveRight(); }
+            if (key = 131) { do h.moveUp(); }
+            if (key = 133) { do h.moveDown(); }
+            if (key = 81)  { let quit = true; }
+            do h.draw();
+
+            let hits = bl.update(h.getX(), h.getY());
+            do bl.drawAll();
+
+            if (hits > 0) {
+                let hp = hp - hits;
+                if (hp < 1) {
+                    let hp = 0;
+                    let ending = 3;
+                }
+                do Ui.hpBar(hp);
+            }
+            let f = f + 1;
+            do Sys.wait(5);
+        }
+
+        do bl.eraseAll();
+        do bl.clear();
+        do h.erase();
+        do Ui.clearBox();
+        let turn = turn + 1;
+        do Ui.turnLabel(turn);
+        return;
+    }
+
+    // ---------- Combate ----------
+    function void battle() {
+        var boolean used;
+
+        do Screen.clearScreen();
+        let b = Box.new(7, 24, 100, 180);          // interior: palabras 7..24, filas 100..180
+        do h.setLimits(b.getMinX(), b.getMaxX(), b.getMinY(), b.getMaxY());
+        let bl = Bullets.new(7, 24, 100, 180, 12);
+        do bl.reseed(seed);
+
+        let hp = 20;
+        let bossHp = 30;
+        let items = 2;
+        let talk = 0;
+        let turn = 1;
+        let menuSel = 0;
+        let ending = 0;
+        let quit = false;
+        let raged = false;
+
+        do Ui.drawBossBig();
+        do Ui.bossBar(bossHp);
+        do Ui.put(1, 4, "LUZBEL");
+        do Ui.put(17, 24, "HP");
+        do Ui.hpBar(hp);
+        do Ui.turnLabel(turn);
+        do Ui.drawMenu();
+
+        while ((ending = 0) & ~quit) {
+            let used = Main.playerTurn();
+            if (used & (ending = 0) & ~quit) {
+                do Main.defend();
+            }
+        }
+
+        if (ending = 1) {
+            do Ui.flashBig();
+            do Sys.wait(200);
+            do Ui.flashBig();
+            do Sys.wait(200);
+            do Ui.clearBossBig();
+            do Ui.clearBox();
+            do Ui.say(10, "* You defeated Luzbel.");
+        }
+        if (ending = 2) {
+            do Ui.clearBox();
+            do Ui.say(10, "* You spared Luzbel.");
+            do Ui.say(11, "* Peaceful ending.");
+        }
+        if (ending = 3) {
+            do Ui.clearBox();
+            do Ui.say(10, "GAME OVER");
+        }
+        if (~quit) {
+            do Ui.put(22, 25, "Press any key");
+            do Main.waitKey();
+        }
+
+        do bl.dispose();
+        do b.dispose();
+        return;
+    }
+
+    function void main() {
+        var int choice;
+
+        let seed = 0;
+        let exit = false;
+        let h = Heart.new(192, 133);
+
+        while (~exit) {
+            let choice = Main.title();
+            if (choice = 0) {
+                if (Main.overworld()) { do Main.battle(); }
+            }
+            if (choice = 1) { do Main.help(); }
+            if (choice = 2) { let exit = true; }
+        }
+
+        do Screen.clearScreen();
+        do h.dispose();
+        return;
+    }
+}

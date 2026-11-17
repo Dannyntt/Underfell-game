@@ -1,0 +1,32 @@
+class Box {
+    field int minX, maxX, minY, maxY;   // limites para la esquina del sprite del corazon
+
+    // wl..wr: palabras del interior (1..30); top..bottom: filas del interior
+    constructor Box new(int wl, int wr, int top, int bottom) {
+        var int xl, xr;
+        let xl = wl * 16;          // primer pixel del interior
+        let xr = (wr + 1) * 16;    // primer pixel del borde derecho
+
+        let minX = xl;
+        let maxX = xr - 17;        // ultima posicion donde el corazon no pisa el borde
+        let minY = top + 7;        // 7 px de hueco arriba
+        let maxY = bottom - 14;    // 7 px de hueco abajo (el sprite mide 8)
+
+        do Screen.setColor(true);
+        do Screen.drawRectangle(xl - 10, top - 3, xr + 2, top - 1);        // arriba
+        do Screen.drawRectangle(xl - 10, bottom + 1, xr + 2, bottom + 3);  // abajo
+        do Screen.drawRectangle(xl - 10, top, xl - 8, bottom);             // izquierda
+        do Screen.drawRectangle(xr, top, xr + 2, bottom);                  // derecha
+        return this;
+    }
+
+    method int getMinX() { return minX; }
+    method int getMaxX() { return maxX; }
+    method int getMinY() { return minY; }
+    method int getMaxY() { return maxY; }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
