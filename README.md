@@ -191,7 +191,7 @@ Contextual behavior
 <table> <tr> <td width="25%" align="center"><b>Title Screen</b></td> <td>Arrows to pick <b>START / HOW TO PLAY / QUIT</b>, then <kbd>Z</kbd> or <kbd>Enter</kbd>.</td> </tr> <tr> <td align="center"><b>Overworld</b></td> <td>Arrows to walk. <kbd>Z</kbd> near the sign to read it. <kbd>Q</kbd> to go back to the title.</td> </tr> <tr> <td align="center"><b>Battle Menu</b></td> <td>Arrows to move the heart cursor between options. <kbd>Z</kbd> to confirm.</td> </tr> <tr> <td align="center"><b>Dodging Phase</b></td> <td>Arrows move the heart inside the battle box.</td> </tr> </table>
 <a id="stats"></a>
 
-🧠 Game Mechanics
+## 🧠 Game Mechanics
 ⚔️ Stats
 Actor	HP	Notes
 🫀 Player	20	Can be healed by Cake
@@ -237,7 +237,8 @@ Duration: 150 + 30 × level frames, where level = turn (capped at 5).
 Pattern for turn N: pattern = turn − 1 (also capped at 4).
 
 <table> <thead> <tr><th align="center">Turn</th><th align="left">Pattern</th><th align="left">Behavior</th></tr> </thead> <tbody> <tr><td align="center"><b>1</b></td><td>🌧️ <b>0 — Rain</b></td><td>Vertical bullets dropping on random lanes</td></tr> <tr><td align="center"><b>2</b></td><td>➡️ <b>1 — Aimed horizontals</b></td><td>Bullets enter from left/right at the heart's row, alternating sides</td></tr> <tr><td align="center"><b>3</b></td><td>🌊 <b>2 — Sweeping curtain</b></td><td>A vertical stream that sweeps lane-by-lane, bouncing at the borders</td></tr> <tr><td align="center"><b>4</b></td><td>🎯 <b>3 — Aimed alternated</b></td><td>Alternates vertical (aimed at the heart's column) and horizontal (aimed at its row)</td></tr> <tr><td align="center"><b>5+</b></td><td>🌀 <b>4 — Chaos</b></td><td>Random mix of vertical and horizontal bullets</td></tr> </tbody> </table>
-📈 Difficulty Scaling
+
+## 📈 Difficulty Scaling
 setLevel(1..5) changes the fire interval and bullet speed:
 
 text
@@ -271,7 +272,7 @@ Sign (read with Z)	"The sign reads: / Only faith will keep you from the fire."
 Battle trigger	Walking into the stairs/door frame → "Luzbel blocks your path."
 <a id="seeding"></a>
 
-🎲 Seeding
+## 🎲 Seeding
 seed is set to the total number of Sys.wait-free loops spent on the title screen.
 
 Translation: how long you take to press Start becomes the RNG seed.
@@ -284,6 +285,7 @@ Neat touch for replay variety.
 The parts I'm most proud of — all hand-rolled in Jack.
 
 </div><table> <tr> <td width="50%" valign="top">
+ 
 ## 🖼️ Framebuffer by Hand
 Every sprite is a bitpacked array written directly to Screen memory at 16384 + row*32 + word. No Screen.drawPixel calls in the hot path — sprites are OR'd/masked into the framebuffer word by word.
 
@@ -320,20 +322,20 @@ The boss's bullet-hell phase gets harder and switches patterns each turn, so the
 
 ## 📝 What I Learned
 <table> <tr> <td width="50%" valign="top">
- 🧠 Manual Memory Management
+## 🧠 Manual Memory Management
 Jack has no generics, no exceptions, no GC. Every String passed to Output.printString must be .dispose()d, every array must be .dispose()d, and every class must .dispose() itself in its own dispose(). Getting this right across Main → Room / Walker / Heart / Box / Bullets / Ui was a real lesson.
 
- 🖥️ The Screen Is a Real Framebuffer
+## 🖥️ The Screen Is a Real Framebuffer
 Drawing via Screen.drawRectangle is convenient but slow. Writing bit patterns directly into 16384 + row*32 + word is orders of magnitude faster and is what makes the sprites animate smoothly in the VM Emulator.
 
- 🧩 Modular Design Pays Off
+## 🧩 Modular Design Pays Off
 The separation between Heart (movement + sub-pixel state), Bullets (pool + patterns), Box (limits + border), and Main (turn logic + endings) meant each piece could be tested and tuned in isolation. Bullets.setPattern() and Bullets.setLevel() were especially clean to tune independently.
 
 </td> <td width="50%" valign="top">
- 🎨 Rendering Order Matters
+## 🎨 Rendering Order Matters
 The Walker is drawn after the room and saves/restores the pixels it covers — otherwise moving across a piece of furniture left holes. This one bit me more than once.
 
- 🔒 Constraints Force Good Design
+ ## 🔒 Constraints Force Good Design
 No sprite engine, no fonts, no audio — just Screen, Keyboard, Output, and a 16-bit CPU. Every visual decision was a bit-level one, and every loop had to fit the frame budget of the VM Emulator at Fast.
 
 </td> </tr> </table>
@@ -355,7 +357,7 @@ Nand2Tetris student
 https://img.shields.io/badge/GitHub-Dannyntt-181717?style=for-the-badge&logo=github
 
 </div>
-## 📜 License
+📜 License
 Source code shared for learning purposes.
 Undertale and Underfell belong to their respective creators. No commercial use is intended.
 
@@ -369,8 +371,6 @@ for Nand2Tetris and the Jack language
 Toby Fox
 creator of Undertale, the foundation of this fan project
 
-The Underfell AU community
-for the red-and-black aesthetic that shaped Luzbel's design and the "DIE! DIE! DIE!" tone
 
 </div>
 <div align="center">
